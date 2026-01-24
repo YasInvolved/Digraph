@@ -35,12 +35,6 @@ public:
 
 	static Digraph fromFile(const std::string_view filepath)
 	{
-		auto parsingError = [&](const std::string_view cause)
-			{
-				logError(fmt::format("Failed to parse {}: {}", filepath, cause));
-				std::exit(-1);
-			};
-
 		std::ifstream file(filepath.data());
 
 		json data;
