@@ -117,8 +117,8 @@ public:
 			if (not edge.contains("from") || not edge.contains("to"))
 				throw std::runtime_error("Missing \"from\" or \"to\" property in edge");
 			
-			auto fvIter = std::find(vertices.begin(), vertices.end(), edge["from"]);
-			auto tvIter = std::find(vertices.begin(), vertices.end(), edge["to"]);
+			auto fvIter = std::find(vertices.begin(), vertices.end(), edge["from"].get<std::string_view>());
+			auto tvIter = std::find(vertices.begin(), vertices.end(), edge["to"].get<std::string_view>());
 
 			if (fvIter == vertices.end() || tvIter == vertices.end())
 				throw std::runtime_error("Nonexistent vertex specified in an edge description");
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
 	}
 	catch (const std::exception& e)
 	{
-		fmt::print("{}\n", program.print_help());
+		fmt::print("{}\n", program.help().str());
 		return 0;
 	}
 
