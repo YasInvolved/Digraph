@@ -37,7 +37,7 @@ jobs:
 
             - name: Build Project
               run: |
-                cmake -S . --preset ${{ matrix.preset }}
+                cmake -S . --preset conf-${{ matrix.preset }}
                 cmake --build --preset build-${{ matrix.preset }}
 
             - name: Upload artifact
