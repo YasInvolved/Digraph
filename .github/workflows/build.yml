@@ -13,11 +13,11 @@ jobs:
                 preset: [win64-visualstudio-clangcl, win64-visualstudio-msvc, ninja-multiconfig]
                 exclude:
                     - os: windows-latest
-                      conf_preset: ninja-multiconfig
+                      preset: ninja-multiconfig
                     - os: ubuntu-latest
-                      conf_preset: win64-visualstudio-msvc
+                      preset: win64-visualstudio-msvc
                     - os: ubuntu-latest
-                      conf_preset: win64-visualstudio-clangcl
+                      preset: win64-visualstudio-clangcl
 
         runs-on: ${{ matrix.os }}
         steps:
