@@ -12,8 +12,6 @@ jobs:
                 os: [ubuntu-latest, windows-latest]
                 preset: [win64-visualstudio-clangcl, win64-visualstudio-msvc, linux-debug, linux-release]
                 exclude:
-                    - os: windows-latest
-                      preset: ninja-multiconfig
                     - os: ubuntu-latest
                       preset: win64-visualstudio-msvc
                     - os: ubuntu-latest
@@ -38,7 +36,7 @@ jobs:
             - name: Build Project
               run: |
                 cmake -S . --preset conf-${{ matrix.preset }}
-                cmake --build --preset build-${{ matrix.preset }}
+                cmake --build --preset ${{ matrix.preset }}
 
             - name: Upload artifact
               uses: actions/upload-artifact@v4
