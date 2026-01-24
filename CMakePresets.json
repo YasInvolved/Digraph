@@ -1,0 +1,109 @@
+{
+	"version": 9,
+	"configurePresets": [
+		{
+			"name": "base",
+			"hidden": true,
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/build/${presetName}",
+			"cacheVariables": {
+				"CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+				"CMAKE_CXX_STANDARD": "20",
+				"CMAKE_CXX_STANDARD_REQUIRED": true
+			}
+		},
+		{
+			"name": "windows-base",
+			"hidden": true,
+			"inherits": "base",
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			},
+			"cacheVariables": {
+				"CMAKE_CXX_COMPILER": "cl",
+				"CMAKE_C_COMPILER": "cl"
+			}
+		},
+		{
+			"name": "linux-base",
+			"hidden": true,
+			"inherits": "base",
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Linux"
+			},
+			"cacheVariables": {
+				"CMAKE_CXX_COMPILER": "clang++",
+				"CMAKE_C_COMPILER": "clang"
+			},
+			"vendor": {
+				"microsoft.com/VisualStudioRemoteSettings/CMake/1.0": {
+					"hostOS": [ "Linux" ]
+				}
+			}
+		},
+		{
+			"name": "conf-windows-debug",
+			"displayName": "Windows Debug (Ninja)",
+			"inherits": "windows-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "conf-windows-release",
+			"displayName": "Windows Optimized Release (Ninja)",
+			"inherits": "windows-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release",
+				"CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+			}
+		},
+		{
+			"name": "conf-linux-debug",
+			"displayName": "Linux Debug (Ninja)",
+			"inherits": "linux-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "conf-linux-release",
+			"displayName": "Linux Optimized Release (Ninja)",
+			"inherits": "linux-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release",
+				"CMAKE_INTERPROCEDURAL_OPTIMIZATION": "ON"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "windows-debug",
+			"displayName": "Windows Debug (Ninja)",
+			"inheritConfigureEnvironment": true,
+			"configurePreset": "conf-windows-debug"
+		},
+		{
+			"name": "windows-release",
+			"displayName": "Windows Optimized Release (Ninja)",
+			"inheritConfigureEnvironment": true,
+			"configurePreset": "conf-windows-release"
+		},
+		{
+			"name": "linux-debug",
+			"displayName": "Linux Debug (Ninja)",
+			"inheritConfigureEnvironment": true,
+			"configurePreset": "conf-linux-debug"
+		},
+		{
+			"name": "linux-release",
+			"displayName": "Linux Optimized Release (Ninja)",
+			"inheritConfigureEnvironment": true,
+			"configurePreset": "conf-linux-release"
+		}
+	]
+}
