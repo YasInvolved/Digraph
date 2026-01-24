@@ -5,7 +5,7 @@ target_precompile_headers(GraphMatrix
 )
 
 target_link_libraries(GraphMatrix 
-	PRIVATE fmt::fmt argparse::argparse
+	PRIVATE fmt::fmt argparse::argparse nlohmann_json
 )
 
 target_include_directories(GraphMatrix 
