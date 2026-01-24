@@ -10,7 +10,7 @@ jobs:
         strategy:
             matrix:
                 os: [ubuntu-latest, windows-latest]
-                preset: [win64-visualstudio-clangcl, win64-visualstudio-msvc, ninja-multiconfig]
+                preset: [win64-visualstudio-clangcl, win64-visualstudio-msvc, linux-debug, linux-release]
                 exclude:
                     - os: windows-latest
                       preset: ninja-multiconfig
@@ -18,6 +18,10 @@ jobs:
                       preset: win64-visualstudio-msvc
                     - os: ubuntu-latest
                       preset: win64-visualstudio-clangcl
+                    - os: windows-latest
+                      preset: linux-debug
+                    - os: windows-latest
+                      preset: linux-release
 
         runs-on: ${{ matrix.os }}
         steps:
