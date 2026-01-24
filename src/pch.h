@@ -14,3 +14,5 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
+
+#include <immintrin.h>

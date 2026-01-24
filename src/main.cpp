@@ -1,3 +1,5 @@
+#include "SIMDMatrix.h"
+
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
@@ -15,51 +17,6 @@ static void logError(const std::string_view content)
 	fmt::print(fmt::fg(fmt::color::red), "{}: {}\n", ERROR_STR, content);
 }
 
-class Matrix
-{
-public:
-	Matrix()
-		: m_width(0), m_height(0), m_array(nullptr)
-	{}
-
-	Matrix(size_t width, size_t height)
-		: m_width(width),
-		m_height(height), 
-		m_array(new uint32_t[width * height])
-	{ }
-
-	Matrix(size_t size)
-		: m_width(size), 
-		m_height(size), 
-		m_array(new uint32_t[size * size])
-	{ }
-
-	~Matrix()
-	{
-		delete[] m_array;
-	}
-
-	void set(size_t row, size_t col, uint32_t value)
-	{
-		assert(m_array != nullptr); // using an unitialized matrix
-		assert(row <= m_width && col <= m_height);
-		m_array[row * m_width + col] = value;
-	}
-
-	uint32_t get(size_t row, size_t col)
-	{
-		assert(m_array != nullptr); // using an unitialized matrix
-		assert(row <= m_width && col <= m_height);
-		return m_array[row * m_width + col];
-	}
-
-	// TODO: + and * operators
-
-private:
-	size_t m_width, m_height;
-	uint32_t* m_array;
-};
-
 class Digraph
 {
 public:
@@ -68,10 +25,10 @@ public:
 	{ }
 
 	Digraph(size_t verticesCount)
-		: m_verticesCount(verticesCount), m_adjMatrix(verticesCount, verticesCount)
+		: m_verticesCount(verticesCount), m_adjMatrix(verticesCount)
 	{}
 
-	Matrix& getAdjMatrix()
+	SIMDMatrix& getAdjMatrix()
 	{
 		return m_adjMatrix;
 	}
@@ -134,7 +91,7 @@ public:
 
 private:
 	size_t m_verticesCount;
-	Matrix m_adjMatrix;
+	SIMDMatrix m_adjMatrix;
 };
 
 int main(int argc, char** argv)
@@ -158,6 +115,12 @@ int main(int argc, char** argv)
 	if (not fs::exists(descFilePath))
 	{
 		logError("Specified file doesn't exist");
+		return -1;
+	}
+	
+	if (not isAVX2Supported())
+	{
+		logError("AVX2 is not supported on this machine. Please try another one.");
 		return -1;
 	}
 

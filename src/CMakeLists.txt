@@ -1,4 +1,4 @@
-add_executable(Digraph "main.cpp" "pch.h")
+add_executable(Digraph "main.cpp" "pch.h" "SIMDMatrix.h" "SIMDMatrix.cpp")
 set_target_properties(Digraph PROPERTIES
 	OUTPUT_NAME_RELEASE "digraph"
 	OUTPUT_NAME_DEBUG "digraph-debug"
@@ -19,3 +19,9 @@ target_link_libraries(Digraph
 target_include_directories(Digraph
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
 )
+
+if (MSVC)
+	target_compile_options(Digraph PRIVATE "/arch:AVX2")
+else()
+	target_compile_options(Digraph PRIVATE "-mavx2" "-mfma")
+endif()
