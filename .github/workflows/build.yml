@@ -11,12 +11,12 @@ jobs:
             fail-fast: false
             matrix:
                 os: [ubuntu-latest, windows-latest]
-                preset: [win64-visualstudio-clangcl, win64-visualstudio-msvc, linux-debug, linux-release]
+                preset: [windows-debug, windows-release, linux-debug, linux-release]
                 exclude:
                     - os: ubuntu-latest
-                      preset: win64-visualstudio-msvc
+                      preset: windows-debug
                     - os: ubuntu-latest
-                      preset: win64-visualstudio-clangcl
+                      preset: windows-release
                     - os: windows-latest
                       preset: linux-debug
                     - os: windows-latest
