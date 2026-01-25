@@ -32,7 +32,7 @@ jobs:
             - name: Install CMake
               uses: ssrobins/install-cmake@v1
               with:
-                version: 4.1.2
+                version: 4.2.2
 
             - name: Build Project
               run: |
