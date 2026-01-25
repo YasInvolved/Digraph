@@ -37,7 +37,7 @@ jobs:
             - name: Install VS 18 2026 Build tools (Windows only)
               if: runner.os == 'Windows'
               run: |
-                curl -L -o vs_buildtools.exe ${{ vars.VS_BUILDTOOLS_URL }}
+                curl -L -o vs_buildtools.exe ${{ env.VS_BUILDTOOLS_URL }}
                 vs_buildtools.exe --quiet --norestart --installPath ..\vs-install --add Microsoft.VisualStudio.Component.VC.14.43.17.13.x86.x64 --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --includeRecommended --noUpdateInstaller
 
             - name: Build Project
