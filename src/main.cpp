@@ -19,6 +19,7 @@ static void logError(const std::string_view content)
 
 class Digraph
 {
+	using LookupTable_t = std::unordered_map<std::string, size_t>;
 public:
 	Digraph()
 		: m_verticesCount(0)
@@ -27,11 +28,6 @@ public:
 	Digraph(size_t verticesCount)
 		: m_verticesCount(verticesCount), m_adjMatrix(verticesCount)
 	{}
-
-	SIMDMatrix& getAdjMatrix()
-	{
-		return m_adjMatrix;
-	}
 
 	static Digraph fromFile(const std::string_view filepath)
 	{
@@ -61,6 +57,7 @@ public:
 
 		Digraph digraph(vertices.size());
 		auto& mat = digraph.getAdjMatrix();
+		auto& lt = digraph.getLookupTable();
 
 		// not the best solution in terms of complexity, but works.
 		for (const auto& edge : edges)
@@ -68,24 +65,44 @@ public:
 			if (not edge.contains("from") || not edge.contains("to"))
 				throw std::runtime_error("Missing \"from\" or \"to\" property in edge");
 			
-			auto fvIter = std::find(vertices.begin(), vertices.end(), edge["from"].get<std::string_view>());
-			auto tvIter = std::find(vertices.begin(), vertices.end(), edge["to"].get<std::string_view>());
+			std::string from = edge["from"].get<std::string>();
+			std::string to = edge["to"].get<std::string>();
+			auto fvIter = std::find(vertices.begin(), vertices.end(), from);
+			auto tvIter = std::find(vertices.begin(), vertices.end(), to);
 
 			if (fvIter == vertices.end() || tvIter == vertices.end())
 				throw std::runtime_error("Nonexistent vertex specified in an edge description");
 
+			// basically we're figuring out which vertex in order this is
 			size_t fvIx = std::distance(vertices.begin(), fvIter);
 			size_t tvIx = std::distance(vertices.begin(), tvIter);
 
-			mat.set(fvIx, tvIx, 1);
+			mat.set(fvIx, tvIx, 1.0f);
+
+			// lookup table serves for quick matrix col/row index finding,
+			// so we don't need to do O(N) col/row searches in matrix
+			lt.try_emplace(std::move(from), fvIx);
+			lt.try_emplace(std::move(to), tvIx);
 		}
 
 		return digraph;
 	}
 
 private:
+	SIMDMatrix& getAdjMatrix()
+	{
+		return m_adjMatrix;
+	}
+
+	LookupTable_t& getLookupTable()
+	{
+		return m_lookupTable;
+	}
+
+private:
 	size_t m_verticesCount;
 	SIMDMatrix m_adjMatrix;
+	LookupTable_t m_lookupTable;
 };
 
 int main(int argc, char** argv)
