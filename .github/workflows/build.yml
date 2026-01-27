@@ -6,7 +6,7 @@ on:
 
 jobs:
     build:
-        name: Build Project
+        name-and-test: Build Project
         strategy:
             fail-fast: false
             matrix:
@@ -40,10 +40,8 @@ jobs:
               with:
                 vs-version: "18.2.1"
 
-            - name: Build Project
-              run: |
-                cmake -S . --preset conf-${{ matrix.preset }}
-                cmake --build --preset ${{ matrix.preset }}
+            - name: Build & Test Project
+              run: cmake --workflow --preset workflow-${{ matrix.preset }}
 
             - name: Upload artifact
               uses: actions/upload-artifact@v4
