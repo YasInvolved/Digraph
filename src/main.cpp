@@ -20,6 +20,7 @@ static void logError(const std::string_view content)
 class Digraph
 {
 	using LookupTable_t = std::unordered_map<std::string, size_t>;
+	using SIMDMatrix = linear_algebra::SIMDMatrix;
 public:
 	Digraph()
 		: m_verticesCount(0)
@@ -28,6 +29,21 @@ public:
 	Digraph(size_t verticesCount)
 		: m_verticesCount(verticesCount), m_adjMatrix(verticesCount)
 	{}
+
+	bool isLeadingTo(const std::string_view from, const std::string_view to) const
+	{
+		size_t fvIx, tvIx;
+
+		if (m_lookupTable.find(from.data()) == m_lookupTable.end() || 
+			m_lookupTable.find(to.data()) == m_lookupTable.end())
+			return false; // wrong vertex was specified
+
+		fvIx = m_lookupTable.at(from.data());
+		tvIx = m_lookupTable.at(to.data());
+
+		auto value = m_adjMatrix.get(fvIx, tvIx);
+		return value == 1.0f;
+	}
 
 	static Digraph fromFile(const std::string_view filepath)
 	{
@@ -94,7 +110,17 @@ private:
 		return m_adjMatrix;
 	}
 
+	const SIMDMatrix& getAdjMatrix() const
+	{
+		return m_adjMatrix;
+	}
+
 	LookupTable_t& getLookupTable()
+	{
+		return m_lookupTable;
+	}
+
+	const LookupTable_t& getLookupTable() const
 	{
 		return m_lookupTable;
 	}
@@ -140,13 +166,15 @@ int main(int argc, char** argv)
 
 	try
 	{
-		auto graph = Digraph::fromFile(descFilePath);
+		graph = Digraph::fromFile(descFilePath);
 	}
 	catch (const std::runtime_error& e)
 	{
 		logError(e.what());
 		return -1;
 	}
+
+	fmt::print("A is leading to B: {}", graph.isLeadingTo("A", "B"));
 
 	return 0;
 }
