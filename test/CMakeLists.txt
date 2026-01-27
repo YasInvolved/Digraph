@@ -7,9 +7,9 @@ target_include_directories(simdmatrix_lib
 target_precompile_headers(simdmatrix_lib PUBLIC matlib_pch.h)
 
 if (MSVC)
-	target_compile_options(simdmatrix_lib PRIVATE "/arch:AVX2")
+	target_compile_options(simdmatrix_lib PUBLIC "/arch:AVX2")
 else()
-	target_compile_options(simdmatrix_lib PRIVATE "-mavx2" "-mfma")
+	target_compile_options(simdmatrix_lib PUBLIC "-mavx2" "-mfma")
 endif()
 
 add_executable(simdmatrix_test test_matrix.cpp)
