@@ -8,6 +8,12 @@ set_target_properties(Digraph PROPERTIES
 	PDB_OUTPUT_DIRECTORY_RELEASE "${CMAKE_BINARY_DIR}/bin"
 )
 
+if (MSVC)
+	target_compile_options(Digraph PRIVATE "/arch:AVX2")
+else()
+	target_compile_options(Digraph PRIVATE "-mavx2" "-mfma")
+endif()
+
 target_precompile_headers(Digraph
 	PRIVATE "pch.h"
 )
@@ -19,9 +25,3 @@ target_link_libraries(Digraph
 target_include_directories(Digraph
 	PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}"
 )
-
-if (MSVC)
-	target_compile_options(Digraph PRIVATE "/arch:AVX2")
-else()
-	target_compile_options(Digraph PRIVATE "-mavx2" "-mfma")
-endif()

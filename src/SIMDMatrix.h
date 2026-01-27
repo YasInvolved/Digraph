@@ -34,18 +34,22 @@ namespace linear_algebra
 		template <ScalarType T>
 		SIMDMatrix operator*(T scalar) noexcept
 		{
-			float scalarValue = scalar; // convert to float
-			SIMDMatrix result = *this;
+			float scalarValue = scalar; // implicitly convert to float
+			SIMDMatrix result(m_rows, m_cols);
+
+			assert(result.m_stride == m_stride);
+
+			__m256 scalarVec = _mm256_set1_ps(scalarValue);
 
 			for (size_t i = 0; i < result.m_rows; i++)
 			{
-				for (size_t j = 0; j < result.m_stride; j++)
+				for (size_t j = 0; j < result.m_cols; j++)
 				{
-					float* resultPtr = &result.m_data[i * result.m_stride + j];
-					__m256 vecA = _mm256_load_ps(resultPtr);
-					__m256 vecB = _mm256_set1_ps(scalarValue);
-
-					__m256 vecRes = _mm256_mul_ps(vecA, vecB);
+					size_t ix = i * m_stride + j;
+					const float* inputPtr = &m_data[ix];
+					float* resultPtr = &result.m_data[ix];
+					__m256 vecA = _mm256_load_ps(inputPtr);
+					__m256 vecRes = _mm256_mul_ps(vecA, scalarVec);
 					_mm256_store_ps(resultPtr, vecRes);
 				}
 			}
@@ -53,10 +57,20 @@ namespace linear_algebra
 			return result;
 		}
 
+		template <ScalarType T>
+		SIMDMatrix operator*=(T scalar) noexcept
+		{
+			*this = *this * scalar;
+			return *this;
+		}
+
 		bool isSquare() const { return m_cols == m_rows; }
 
 		float get(size_t row, size_t col) const;
 		void set(size_t row, size_t col, float value);
+
+		size_t getRowCount() const { return m_rows; }
+		size_t getColCount() const { return m_cols; }
 
 		static SIMDMatrix Identity(size_t size);
 		
