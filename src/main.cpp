@@ -34,8 +34,7 @@ public:
 	{
 		size_t fvIx, tvIx;
 
-		if (m_lookupTable.find(from.data()) == m_lookupTable.end() || 
-			m_lookupTable.find(to.data()) == m_lookupTable.end())
+		if (!vertexExists(from) || !vertexExists(to))
 			return false; // wrong vertex was specified
 
 		fvIx = m_lookupTable.at(from.data());
@@ -43,6 +42,12 @@ public:
 
 		auto value = m_adjMatrix.get(fvIx, tvIx);
 		return value == 1.0f;
+	}
+
+	void findPath(const std::string_view v1, const std::string_view v2, uint32_t length)
+	{
+		if (!vertexExists(v1) || !vertexExists(v2))
+			throw std::runtime_error("One of specified vertices doesn't exist in this graph!");
 	}
 
 	static Digraph fromFile(const std::string_view filepath)
@@ -72,8 +77,8 @@ public:
 			throw std::runtime_error("A graph described in file should have at least 2 vertices and 1 edge");
 
 		Digraph digraph(vertices.size());
-		auto& mat = digraph.getAdjMatrix();
-		auto& lt = digraph.getLookupTable();
+		auto& mat = digraph.m_adjMatrix;
+		auto& lt = digraph.m_lookupTable;
 
 		// not the best solution in terms of complexity, but works.
 		for (const auto& edge : edges)
@@ -105,24 +110,12 @@ public:
 	}
 
 private:
-	SIMDMatrix& getAdjMatrix()
+	bool vertexExists(const std::string_view v) const
 	{
-		return m_adjMatrix;
-	}
+		if (m_lookupTable.find(v.data()) != m_lookupTable.end())
+			return true;
 
-	const SIMDMatrix& getAdjMatrix() const
-	{
-		return m_adjMatrix;
-	}
-
-	LookupTable_t& getLookupTable()
-	{
-		return m_lookupTable;
-	}
-
-	const LookupTable_t& getLookupTable() const
-	{
-		return m_lookupTable;
+		return false;
 	}
 
 private:
@@ -174,7 +167,8 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	fmt::print("A is leading to B: {}", graph.isLeadingTo("A", "B"));
+	fmt::print("A is leading to B: {}\n", graph.isLeadingTo("A", "B"));
+	graph.findPath("A", "C", 2);
 
 	return 0;
 }

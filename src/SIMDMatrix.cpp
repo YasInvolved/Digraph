@@ -30,93 +30,176 @@ bool isAVX2Supported()
 	return (cpuInfo[1] & 0x20) != 0;
 }
 
+static void* alloc_aligned(size_t size)
+{
+#ifdef _WIN32
+	return _aligned_malloc(size, 32); // 32-byte alignment for AVX2
+#else
+	void* ptr = nullptr;
+	if (posix_memalign(&ptr, 32, size) != 0)
+		return nullptr;
+
+	return ptr;
+#endif
+}
+
+static void free_aligned(void* ptr)
+{
+#ifdef _WIN32
+	_aligned_free(ptr);
+#else
+	free(ptr);
+#endif
+}
+
 using namespace linear_algebra;
 
-SIMDMatrix::SIMDMatrix()
-	: m_size(0), m_array(nullptr)
-{}
-
-SIMDMatrix::SIMDMatrix(size_t size)
-	: m_size(size),
-	m_array(std::unique_ptr<float>(new float[m_size * m_size]))
-{}
-
-void SIMDMatrix::set(size_t row, size_t col, float value)
+SIMDMatrix::SIMDMatrix(size_t rc)
+	: m_rows(rc), m_cols(rc)
 {
-	assert(m_array != nullptr); // using an unitialized matrix
-	assert(row <= m_size && col <= m_size);
-	m_array.get()[row * m_size + col] = value;
+	initialize();
+}
+
+SIMDMatrix::SIMDMatrix(size_t rows, size_t cols)
+	: m_rows(rows), m_cols(cols)
+{
+	initialize();
+}
+
+void SIMDMatrix::initialize()
+{
+	m_stride = (m_cols + 7) & ~7;
+
+	size_t bytes = m_rows * m_stride * sizeof(float);
+	m_data = (float*)alloc_aligned(bytes);
+
+	if (!m_data)
+		throw std::bad_alloc();
+
+	std::memset(m_data, 0, bytes);
+}
+
+SIMDMatrix::~SIMDMatrix()
+{
+	if (!m_data)
+		return;
+
+	free_aligned(m_data);
+	m_data = nullptr;
+}
+
+SIMDMatrix::SIMDMatrix(const SIMDMatrix& other)
+	: m_rows(other.m_rows), m_cols(other.m_cols), m_stride(other.m_stride)
+{
+	size_t bytes = m_rows * m_stride * sizeof(float);
+	m_data = (float*)alloc_aligned(bytes);
+	std::memcpy(m_data, other.m_data, bytes);
+}
+
+SIMDMatrix& SIMDMatrix::operator=(const SIMDMatrix& other)
+{
+	if (this == &other)
+		return *this;
+
+	size_t neededBytes = other.m_rows * other.m_stride * sizeof(float);
+	size_t currentBytes = m_rows * m_stride * sizeof(float);
+
+	if (neededBytes != currentBytes)
+	{
+		free_aligned(m_data);
+		m_data = (float*)alloc_aligned(neededBytes);
+	}
+
+	m_rows = other.m_rows;
+	m_cols = other.m_cols;
+	m_stride = other.m_stride;
+	std::memcpy(m_data, other.m_data, neededBytes);
+
+	return *this;
+}
+
+SIMDMatrix::SIMDMatrix(SIMDMatrix&& other) noexcept
+	: m_rows(other.m_rows),
+	m_cols(other.m_cols),
+	m_stride(other.m_stride),
+	m_data(other.m_data)
+{
+	other.m_data = nullptr;
+	other.m_rows = 0;
+	other.m_cols = 0;
+}
+
+SIMDMatrix& SIMDMatrix::operator=(SIMDMatrix&& other) noexcept
+{
+	if (this == &other)
+		return *this;
+
+	free_aligned(m_data);
+	m_data = other.m_data;
+	m_rows = other.m_rows;
+	m_cols = other.m_cols;
+	m_stride = other.m_stride;
+
+	other.m_data = nullptr;
+	other.m_rows = 0;
+	other.m_cols = 0;
+	other.m_stride = 0;
+	return *this;
+}
+
+SIMDMatrix SIMDMatrix::operator+(const SIMDMatrix& other)
+{
+	if (m_rows != other.m_rows || m_cols != other.m_cols)
+		throw std::runtime_error("Attempting to add 2 different matrices");
+
+	assert(m_stride == other.m_stride);
+
+	SIMDMatrix mat(m_rows, m_cols);
+
+	for (size_t i = 0; i < m_rows; i++)
+	{
+		for (size_t j = 0; j < m_stride; j++)
+		{
+			size_t ix = i * m_stride + j;
+			const float* inA = &m_data[ix];
+			const float* inB = &other.m_data[ix];
+			float* out = &mat.m_data[ix];
+
+			__m256 vecA = _mm256_load_ps(inA);
+			__m256 vecB = _mm256_load_ps(inB);
+			__m256 vecRes = _mm256_add_ps(vecA, vecB);
+
+			_mm256_store_ps(out, vecRes);
+		}
+	}
+
+	return mat;
 }
 
 float SIMDMatrix::get(size_t row, size_t col) const
 {
-	assert(m_array != nullptr); // using an unitialized matrix
-	assert(row <= m_size && col <= m_size);
-	return m_array.get()[row * m_size + col];
-}
-
-SIMDMatrix SIMDMatrix::operator+(const SIMDMatrix& m)
-{
-	SIMDMatrix result(m_size);
-	if (m_size != m.m_size)
-		throw std::runtime_error("You can't add matrices with different sizes");
-
-	uint64_t n = m_size * m_size;
-
-	size_t i = 0;
-	for (; i < n - 8; i += 8)
-	{
-		__m256 vecA = _mm256_loadu_ps(&m_array.get()[i]);
-		__m256 vecB = _mm256_loadu_ps(&m.m_array.get()[i]);
-
-		__m256 sum = _mm256_add_ps(vecA, vecB);
-
-		_mm256_storeu_ps(&result.m_array.get()[i], sum);
+	if (row >= m_rows || col >= m_cols) {
+		throw std::out_of_range("Matrix index out of bounds");
 	}
 
-	for (; i < n; i++)
-		result.m_array.get()[i] = m_array.get()[i] + m.m_array.get()[i];
-
-	return result;
+	return m_data[row * m_stride + col];
 }
 
-SIMDMatrix SIMDMatrix::operator*(const SIMDMatrix& m)
+void SIMDMatrix::set(size_t row, size_t col, float value)
 {
-	// multiplying 2 square matrices of the same size results in
-	// square matrix
-	SIMDMatrix result(m_size);
+	if (row >= m_rows || col >= m_cols)
+		throw std::out_of_range("Matrix index out of bounds");
 
-	for (size_t i = 0; i < m_size; i++)
-	for (size_t j = 0; j < m_size; j++)
-	{
-		// set all registers to contain m_array[i * m_size + j]
-		__m256 valA = _mm256_set1_ps(m_array.get()[i * m_size + j]);
-
-		size_t k = 0;
-		for (; k <= m_size - 8; k += 8)
-		{
-			__m256 vecC = _mm256_loadu_ps(&result.m_array.get()[i * m_size + k]);
-			__m256 vecB = _mm256_loadu_ps(&m.m_array.get()[j * m_size + k]);
-
-			vecC = _mm256_fmadd_ps(valA, vecB, vecC);
-
-			_mm256_storeu_ps(&result.m_array.get()[i * m_size + k], vecC);
-		}
-
-		for (; k < m_size; k++) {
-			result.m_array.get()[i * m_size + k] += m_array.get()[i * m_size + j] * m_array.get()[j * m_size + k];
-		}
-	}
-
-	return result;
+	m_data[row * m_stride + col] = value;
 }
 
 SIMDMatrix SIMDMatrix::Identity(size_t size)
 {
-	SIMDMatrix m(size);
+	SIMDMatrix mat(size);
+	
+	size_t limit = std::min(mat.m_rows, mat.m_cols);
+	for (size_t i = 0; i < limit; i++)
+		mat.m_data[i * mat.m_stride + i] = 1.0f;
 
-	for (size_t i = 0; i < size; i++)
-		m.set(i, i, 1.0f);
-
-	return m;
+	return mat;
 }
