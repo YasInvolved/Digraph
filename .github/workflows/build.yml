@@ -5,8 +5,8 @@ on:
     pull_request:
 
 jobs:
-    build:
-        name-and-test: Build Project
+    build-and-test:
+        name: Build & Test Project
         strategy:
             fail-fast: false
             matrix:
