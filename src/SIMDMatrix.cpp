@@ -30,16 +30,14 @@ bool isAVX2Supported()
 	return (cpuInfo[1] & 0x20) != 0;
 }
 
-static void* alloc_aligned(size_t size)
+static void* alloc_aligned(size_t size, size_t alignment)
 {
-#ifdef _WIN32
-	return _aligned_malloc(size, 32); // 32-byte alignment for AVX2
-#else
-	void* ptr = nullptr;
-	if (posix_memalign(&ptr, 32, size) != 0)
-		return nullptr;
+	size_t safeSize = (size + alignment - 1) & ~(alignment - 1);
 
-	return ptr;
+#ifdef _MSC_VER
+	return _aligned_malloc(safeSize, alignment);
+#else
+	return std::aligned_alloc(alignment, safeSize);
 #endif
 }
 
@@ -48,11 +46,13 @@ static void free_aligned(void* ptr)
 #ifdef _WIN32
 	_aligned_free(ptr);
 #else
-	free(ptr);
+	std::free(ptr);
 #endif
 }
 
 using namespace linear_algebra;
+
+static constexpr size_t SIMD_ALIGNMENT = 32ull;
 
 SIMDMatrix::SIMDMatrix(size_t rc)
 	: m_rows(rc), m_cols(rc)
@@ -71,7 +71,7 @@ void SIMDMatrix::initialize()
 	m_stride = (m_cols + 7) & ~7;
 
 	size_t bytes = m_rows * m_stride * sizeof(float);
-	m_data = (float*)alloc_aligned(bytes);
+	m_data = (float*)alloc_aligned(bytes, SIMD_ALIGNMENT);
 
 	if (!m_data)
 		throw std::bad_alloc();
@@ -92,7 +92,7 @@ SIMDMatrix::SIMDMatrix(const SIMDMatrix& other)
 	: m_rows(other.m_rows), m_cols(other.m_cols), m_stride(other.m_stride)
 {
 	size_t bytes = m_rows * m_stride * sizeof(float);
-	m_data = (float*)alloc_aligned(bytes);
+	m_data = (float*)alloc_aligned(bytes, SIMD_ALIGNMENT);
 	std::memcpy(m_data, other.m_data, bytes);
 }
 
@@ -107,7 +107,7 @@ SIMDMatrix& SIMDMatrix::operator=(const SIMDMatrix& other)
 	if (neededBytes != currentBytes)
 	{
 		free_aligned(m_data);
-		m_data = (float*)alloc_aligned(neededBytes);
+		m_data = (float*)alloc_aligned(neededBytes, SIMD_ALIGNMENT);
 	}
 
 	m_rows = other.m_rows;
