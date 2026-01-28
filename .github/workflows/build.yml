@@ -41,7 +41,7 @@ jobs:
                 vs-version: "18.2.1"
 
             - name: Build & Test Project
-              run: cmake --workflow --preset workflow-${{ matrix.preset }} -DDIGRAPH_BUILD_TESTS=ON
+              run: cmake --workflow --preset workflow-${{ matrix.preset }}
 
             - name: Upload artifact
               uses: actions/upload-artifact@v4
