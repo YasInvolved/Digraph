@@ -153,12 +153,13 @@ SIMDMatrix SIMDMatrix::operator+(const SIMDMatrix& other)
 		throw std::runtime_error("Attempting to add 2 different matrices");
 
 	assert(m_stride == other.m_stride);
+	assert((m_stride * sizeof(float)) % SIMD_ALIGNMENT == 0);
 
 	SIMDMatrix mat(m_rows, m_cols);
 
 	for (size_t i = 0; i < m_rows; i++)
 	{
-		for (size_t j = 0; j < m_stride; j++)
+		for (size_t j = 0; j < m_stride; j+=8)
 		{
 			size_t ix = i * m_stride + j;
 			const float* inA = &m_data[ix];

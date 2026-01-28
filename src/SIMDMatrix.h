@@ -30,6 +30,11 @@ namespace linear_algebra
 		SIMDMatrix& operator=(SIMDMatrix&& other) noexcept;
 
 		SIMDMatrix operator+(const SIMDMatrix&);
+		inline SIMDMatrix operator+=(const SIMDMatrix& other)
+		{
+			*this = *this + other;
+			return *this;
+		}
 		
 		template <ScalarType T>
 		SIMDMatrix operator*(T scalar) noexcept
@@ -43,7 +48,7 @@ namespace linear_algebra
 
 			for (size_t i = 0; i < result.m_rows; i++)
 			{
-				for (size_t j = 0; j < result.m_cols; j++)
+				for (size_t j = 0; j < result.m_stride; j+=8)
 				{
 					size_t ix = i * m_stride + j;
 					const float* inputPtr = &m_data[ix];
@@ -58,7 +63,7 @@ namespace linear_algebra
 		}
 
 		template <ScalarType T>
-		SIMDMatrix operator*=(T scalar) noexcept
+		inline SIMDMatrix operator*=(T scalar) noexcept
 		{
 			*this = *this * scalar;
 			return *this;
