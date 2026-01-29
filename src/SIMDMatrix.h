@@ -5,10 +5,7 @@ bool isAVX2Supported();
 namespace linear_algebra
 {
 	template <typename T>
-	concept ScalarType = requires {
-		std::is_arithmetic_v<T>;
-		std::convertible_to<T, float>;
-	};
+	concept ScalarType = std::is_arithmetic_v<T> && std::convertible_to<T, float>;
 
 	class SIMDMatrix
 	{
@@ -36,13 +33,10 @@ namespace linear_algebra
 			return *this;
 		}
 		
-		template <ScalarType T>
-		SIMDMatrix operator*(T scalar) noexcept
+		friend SIMDMatrix operator*(const SIMDMatrix& rhs, ScalarType auto lhs) noexcept
 		{
-			float scalarValue = scalar; // implicitly convert to float
-			SIMDMatrix result(m_rows, m_cols);
-
-			assert(result.m_stride == m_stride);
+			float scalarValue = lhs; // implicitly convert to float
+			SIMDMatrix result = rhs;
 
 			__m256 scalarVec = _mm256_set1_ps(scalarValue);
 
@@ -50,8 +44,8 @@ namespace linear_algebra
 			{
 				for (size_t j = 0; j < result.m_stride; j+=8)
 				{
-					size_t ix = i * m_stride + j;
-					const float* inputPtr = &m_data[ix];
+					size_t ix = i * rhs.m_stride + j;
+					const float* inputPtr = &rhs.m_data[ix];
 					float* resultPtr = &result.m_data[ix];
 					__m256 vecA = _mm256_load_ps(inputPtr);
 					__m256 vecRes = _mm256_mul_ps(vecA, scalarVec);
@@ -62,11 +56,26 @@ namespace linear_algebra
 			return result;
 		}
 
-		template <ScalarType T>
-		inline SIMDMatrix operator*=(T scalar) noexcept
+		SIMDMatrix& operator*=(ScalarType auto lhs) noexcept
 		{
-			*this = *this * scalar;
+			__m256 scalarVec = _mm256_set1_ps(static_cast<float>(lhs));
+
+			for (size_t i = 0; i < m_rows; i++)
+			for (size_t j = 0; j < m_stride; j += 8)
+			{
+				size_t ix = i * m_stride + j;
+				float* inputPtr = &m_data[i * m_stride + j];
+				__m256 vecMat = _mm256_load_ps(inputPtr);
+				__m256 res = _mm256_mul_ps(vecMat, scalarVec);
+				_mm256_store_ps(inputPtr, res);
+			}
+
 			return *this;
+		}
+
+		inline friend SIMDMatrix operator*(ScalarType auto lhs, const SIMDMatrix& rhs)
+		{
+			return lhs * rhs;
 		}
 
 		bool isSquare() const { return m_cols == m_rows; }
