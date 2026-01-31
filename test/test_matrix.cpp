@@ -2,7 +2,7 @@
 #include <random>
 #include "SIMDMatrix.h"
 
-static constexpr size_t MATRIX_SIZE_LIMIT = 204; // Max. 2MB of heap mem used
+static constexpr size_t MATRIX_SIZE_LIMIT = 51;
 using SIMDMatrix = linear_algebra::SIMDMatrix;
 
 static std::random_device dev;

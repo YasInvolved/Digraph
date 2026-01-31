@@ -82,25 +82,29 @@
 			"name": "windows-debug",
 			"displayName": "Windows Debug (Ninja)",
 			"inheritConfigureEnvironment": true,
-			"configurePreset": "conf-windows-debug"
+			"configurePreset": "conf-windows-debug",
+			"configuration": "Debug"
 		},
 		{
 			"name": "windows-release",
 			"displayName": "Windows Optimized Release (Ninja)",
 			"inheritConfigureEnvironment": true,
-			"configurePreset": "conf-windows-release"
+			"configurePreset": "conf-windows-release",
+			"configuration": "Release"
 		},
 		{
 			"name": "linux-debug",
 			"displayName": "Linux Debug (Ninja)",
 			"inheritConfigureEnvironment": true,
-			"configurePreset": "conf-linux-debug"
+			"configurePreset": "conf-linux-debug",
+			"configuration": "Debug"
 		},
 		{
 			"name": "linux-release",
 			"displayName": "Linux Optimized Release (Ninja)",
 			"inheritConfigureEnvironment": true,
-			"configurePreset": "conf-linux-release"
+			"configurePreset": "conf-linux-release",
+			"configuration": "Release"
 		}
 	],
 	"testPresets": [
