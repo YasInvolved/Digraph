@@ -44,10 +44,8 @@ namespace linear_algebra
 		
 		friend SIMDMatrix operator*(const SIMDMatrix& rhs, ScalarType auto lhs) noexcept
 		{
-			float scalarValue = lhs; // implicitly convert to float
 			SIMDMatrix result = rhs;
-
-			__m256 scalarVec = _mm256_set1_ps(scalarValue);
+			__m256 scalarVec = _mm256_set1_ps(static_cast<float>(lhs));
 
 			for (size_t i = 0; i < result.m_rows; i++)
 			{
@@ -66,6 +64,11 @@ namespace linear_algebra
 			return result;
 		}
 
+		inline friend SIMDMatrix operator*(ScalarType auto lhs, const SIMDMatrix& rhs) noexcept
+		{
+			return rhs * lhs;
+		}
+
 		SIMDMatrix& operator*=(ScalarType auto lhs) noexcept
 		{
 			__m256 scalarVec = _mm256_set1_ps(static_cast<float>(lhs));
@@ -81,12 +84,6 @@ namespace linear_algebra
 
 			_mm256_zeroupper();
 			return *this;
-		}
-
-		inline friend SIMDMatrix operator*(ScalarType auto lhs, const SIMDMatrix& rhs)
-		{
-			SIMDMatrix res = rhs;
-			return res *= lhs;
 		}
 
 		friend SIMDMatrix operator*(const SIMDMatrix& lhs, const SIMDMatrix& rhs);

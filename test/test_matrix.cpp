@@ -12,7 +12,7 @@ static SIMDMatrix naiveMultiplication(const SIMDMatrix& lhs, const SIMDMatrix& r
 {
 	// Assertion is enough here. writing code manually. 
 	// SIMDMatrix is treated as some kind of lib
-	assert(lhs.getRowCount() == rhs.getColCount());
+	assert(lhs.getColCount() == rhs.getRowCount());
 	SIMDMatrix result(lhs.getRowCount(), rhs.getColCount());
 
 	for (size_t i = 0; i < result.getRowCount(); i++)
