@@ -71,6 +71,9 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Copy licensing notices
+        run: cp THIRD_PARTY_NOTICES.txt ./dist/THIRD_PARTY_NOTICES.txt
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
