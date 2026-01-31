@@ -209,7 +209,8 @@ SIMDMatrix SIMDMatrix::Identity(size_t size)
 
 SIMDMatrix linear_algebra::operator*(const SIMDMatrix& lhs, const SIMDMatrix& rhs)
 {
-	assert(lhs.m_cols == rhs.m_rows);
+	if (lhs.m_cols != rhs.m_cols)
+		throw std::invalid_argument("Invalid argument: Multiplied matrix column count must be equal to the row count of matrix multiplied by");
 
 	SIMDMatrix result(lhs.m_rows, rhs.m_cols);
 
