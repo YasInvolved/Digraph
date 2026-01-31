@@ -217,6 +217,12 @@ int main(int argc, char** argv)
 		switch (choice)
 		{
 		case '1':
+			int len;
+			fmt::print("Length: ");
+			std::cin >> std::setw(6) >> len;
+
+			graph.findAllPathsWithLength(len);
+
 			break;
 		case '2':
 			break;
