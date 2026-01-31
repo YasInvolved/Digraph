@@ -9,9 +9,16 @@ set_target_properties(Digraph PROPERTIES
 )
 
 if (MSVC)
-	target_compile_options(Digraph PRIVATE "/arch:AVX2")
+	target_compile_options(Digraph PRIVATE "/arch:AVX2" "$<$<CONFIG:Release>:/Z7>")
+	target_link_options(Digraph PRIVATE "$<$<CONFIG:Release>:/DEBUG:NONE>")
 else()
-	target_compile_options(Digraph PRIVATE "-mavx2" "-mfma")
+	target_compile_options(Digraph PRIVATE "-mavx2" "-mfma" "$<$<CONFIG:Release>:-g0>")
+	
+	if (APPLE)
+		target_link_options(Digraph PRIVATE "$<$<CONFIG:Release>:-Wl,-x>")
+	else()
+		target_link_options(Digraph PRIVATE "$<$<CONFIG:Release>:-s>")
+	endif()
 endif()
 
 target_precompile_headers(Digraph

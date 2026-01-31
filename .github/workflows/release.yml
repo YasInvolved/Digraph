@@ -50,7 +50,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: digraph-${{ matrix.preset }}-${GITHUB_REF_NAME}
-          path: build/conf-${{ matrix.preset }}/bin/*.exe
+          path: build/conf-${{ matrix.preset }}/bin/*
 
   create-release:
     name: Create Release
