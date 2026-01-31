@@ -143,6 +143,29 @@ private:
 	std::unordered_map<size_t, std::string> m_ixToVert;
 };
 
+static char menu(const std::string_view prompt)
+{
+	char input;
+	while (true)
+	{
+		std::cout << prompt;
+		std::cin >> std::setw(1) >> input;
+
+		bool garbage = (std::cin.peek() == '\n' && std::cin.peek() == EOF);
+
+		if (std::isdigit(input) && !garbage)
+		{
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			return input;
+		}
+		else
+		{
+			std::cin.clear();
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		}
+	}
+}
+
 int main(int argc, char** argv)
 {
 	argparse::ArgumentParser program("GraphMatrix", "1.0");
@@ -189,18 +212,18 @@ int main(int argc, char** argv)
 	bool run = true;
 	while (run)
 	{
-		uint32_t choice;
-		fmt::print("Tasks:\n\t1. Find a path of specified length\n\t2. Check if the graph is acyclic.\n\t3. exit\n\nChoice: ");
-		std::cin >> choice;
+		int choice = menu("Choose an action:\n\t1. Look for paths with specified lenght\n\t2. Check wether the graph is acyclic\n\t3. Exit\n\nChoice: ");
 
 		switch (choice)
 		{
-		case 1:
+		case '1':
 			break;
-		case 2:
+		case '2':
 			break;
-		case 3:
+		case '3':
 			run = false;
+			break;
+		default:
 			break;
 		}
 	}
