@@ -87,6 +87,11 @@ namespace linear_algebra
 		}
 
 		friend SIMDMatrix operator*(const SIMDMatrix& lhs, const SIMDMatrix& rhs);
+		SIMDMatrix& operator*=(const SIMDMatrix& lhs)
+		{
+			*this = *this * lhs;
+			return *this;
+		}
 
 		static SIMDMatrix Identity(size_t size);
 		
@@ -97,4 +102,7 @@ namespace linear_algebra
 		size_t m_rows, m_cols, m_stride, m_strideRow;
 		float* m_data;
 	};
+
+	// no need for pow -1, -2, 1/2 etc.
+	SIMDMatrix pow(const SIMDMatrix& mat, uint64_t pow);
 }

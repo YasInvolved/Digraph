@@ -253,3 +253,20 @@ SIMDMatrix linear_algebra::operator*(const SIMDMatrix& lhs, const SIMDMatrix& rh
 	_mm256_zeroupper();
 	return result;
 }
+
+SIMDMatrix linear_algebra::pow(const SIMDMatrix& mat, uint64_t pow)
+{
+	if (pow == 0 && !mat.isSquare())
+		throw std::invalid_argument("Bringing non-square matrix to the power of 0 is undefined");
+	else if (pow == 0)
+		return SIMDMatrix::Identity(mat.getRowCount());
+
+	if (pow == 1)
+		return mat;
+
+	SIMDMatrix res = mat;
+	for (uint64_t i = 0; i < pow; i++)
+		res *= mat;
+
+	return res;
+}
