@@ -265,7 +265,7 @@ SIMDMatrix linear_algebra::pow(const SIMDMatrix& mat, uint64_t pow)
 		return mat;
 
 	SIMDMatrix res = mat;
-	for (uint64_t i = 0; i < pow; i++)
+	for (uint64_t i = 1; i < pow; i++)
 		res *= mat;
 
 	return res;
