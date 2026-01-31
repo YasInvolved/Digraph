@@ -68,9 +68,11 @@ SIMDMatrix::SIMDMatrix(size_t rows, size_t cols)
 
 void SIMDMatrix::initialize()
 {
+	// rows aligned to 4 and cols aligned to 8
 	m_stride = (m_cols + 7) & ~7;
+	m_strideRow = (m_rows + 3) & ~3;
 
-	size_t bytes = m_rows * m_stride * sizeof(float);
+	size_t bytes = m_strideRow * m_stride * sizeof(float);
 	m_data = (float*)alloc_aligned(bytes, SIMD_ALIGNMENT);
 
 	if (!m_data)
@@ -203,4 +205,45 @@ SIMDMatrix SIMDMatrix::Identity(size_t size)
 		mat.m_data[i * mat.m_stride + i] = 1.0f;
 
 	return mat;
+}
+
+SIMDMatrix linear_algebra::operator*(const SIMDMatrix& lhs, const SIMDMatrix& rhs)
+{
+	assert(lhs.m_cols == rhs.m_rows);
+
+	SIMDMatrix result(lhs.m_rows, rhs.m_cols);
+
+	for (size_t i = 0; i < result.m_rows; i += 4)
+		for (size_t j = 0; j < result.m_stride; j += 8)
+		{
+			__m256 c0 = _mm256_setzero_ps();
+			__m256 c1 = _mm256_setzero_ps();
+			__m256 c2 = _mm256_setzero_ps();
+			__m256 c3 = _mm256_setzero_ps();
+
+			for (size_t k = 0; k < lhs.m_cols; k++)
+			{
+				__m256 rowRhs = _mm256_load_ps(&rhs.m_data[k * rhs.m_stride + j]);
+
+				__m256 a0 = _mm256_set1_ps(lhs.m_data[i * lhs.m_stride + k]);
+				c0 = _mm256_fmadd_ps(a0, rowRhs, c0);
+
+				__m256 a1 = _mm256_set1_ps(lhs.m_data[(i + 1) * lhs.m_stride + k]);
+				c1 = _mm256_fmadd_ps(a1, rowRhs, c1);
+
+				__m256 a2 = _mm256_set1_ps(lhs.m_data[(i + 2) * lhs.m_stride + k]);
+				c2 = _mm256_fmadd_ps(a2, rowRhs, c2);
+
+				__m256 a3 = _mm256_set1_ps(lhs.m_data[(i + 3) * lhs.m_stride + k]);
+				c3 = _mm256_fmadd_ps(a3, rowRhs, c3);
+			}
+
+			_mm256_store_ps(&result.m_data[i * result.m_stride + j], c0);
+			_mm256_store_ps(&result.m_data[(i + 1) * result.m_stride + j], c1);
+			_mm256_store_ps(&result.m_data[(i + 2) * result.m_stride + j], c2);
+			_mm256_store_ps(&result.m_data[(i + 3) * result.m_stride + j], c3);
+		}
+
+	_mm256_zeroupper();
+	return result;
 }

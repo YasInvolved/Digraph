@@ -26,6 +26,15 @@ namespace linear_algebra
 		SIMDMatrix(SIMDMatrix&& other) noexcept;
 		SIMDMatrix& operator=(SIMDMatrix&& other) noexcept;
 
+
+		bool isSquare() const { return m_cols == m_rows; }
+
+		float get(size_t row, size_t col) const;
+		void set(size_t row, size_t col, float value);
+
+		size_t getRowCount() const { return m_rows; }
+		size_t getColCount() const { return m_cols; }
+
 		SIMDMatrix operator+(const SIMDMatrix&);
 		inline SIMDMatrix operator+=(const SIMDMatrix& other)
 		{
@@ -53,6 +62,7 @@ namespace linear_algebra
 				}
 			}
 
+			_mm256_zeroupper();
 			return result;
 		}
 
@@ -70,6 +80,7 @@ namespace linear_algebra
 				_mm256_store_ps(inputPtr, res);
 			}
 
+			_mm256_zeroupper();
 			return *this;
 		}
 
@@ -78,13 +89,7 @@ namespace linear_algebra
 			return lhs * rhs;
 		}
 
-		bool isSquare() const { return m_cols == m_rows; }
-
-		float get(size_t row, size_t col) const;
-		void set(size_t row, size_t col, float value);
-
-		size_t getRowCount() const { return m_rows; }
-		size_t getColCount() const { return m_cols; }
+		friend SIMDMatrix operator*(const SIMDMatrix& lhs, const SIMDMatrix& rhs);
 
 		static SIMDMatrix Identity(size_t size);
 		
@@ -92,7 +97,7 @@ namespace linear_algebra
 		void initialize();
 
 	private:
-		size_t m_rows, m_cols, m_stride;
+		size_t m_rows, m_cols, m_stride, m_strideRow;
 		float* m_data;
 	};
 }
