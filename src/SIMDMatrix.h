@@ -11,7 +11,7 @@ namespace linear_algebra
 	{
 	public:
 		SIMDMatrix()
-			: m_rows(0), m_cols(0), m_stride(0), m_data(nullptr)
+			: m_rows(0), m_cols(0), m_stride(0), m_strideRow(0), m_data(nullptr)
 		{ }
 
 		SIMDMatrix(size_t rc);
@@ -73,7 +73,6 @@ namespace linear_algebra
 			for (size_t i = 0; i < m_rows; i++)
 			for (size_t j = 0; j < m_stride; j += 8)
 			{
-				size_t ix = i * m_stride + j;
 				float* inputPtr = &m_data[i * m_stride + j];
 				__m256 vecMat = _mm256_load_ps(inputPtr);
 				__m256 res = _mm256_mul_ps(vecMat, scalarVec);
@@ -86,7 +85,8 @@ namespace linear_algebra
 
 		inline friend SIMDMatrix operator*(ScalarType auto lhs, const SIMDMatrix& rhs)
 		{
-			return lhs * rhs;
+			SIMDMatrix res = rhs;
+			return res *= lhs;
 		}
 
 		friend SIMDMatrix operator*(const SIMDMatrix& lhs, const SIMDMatrix& rhs);
