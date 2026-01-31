@@ -1,7 +1,5 @@
 #pragma once
 
-bool isAVX2Supported();
-
 namespace linear_algebra
 {
 	template <typename T>
@@ -28,6 +26,7 @@ namespace linear_algebra
 
 
 		bool isSquare() const { return m_cols == m_rows; }
+		bool isZero() const;
 
 		float get(size_t row, size_t col) const;
 		void set(size_t row, size_t col, float value);

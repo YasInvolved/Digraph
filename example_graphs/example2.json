@@ -1,0 +1,34 @@
+{
+  "$comment": "A tree",
+  "vertices": [ "A", "B", "C", "D", "E", "F", "G", "H"],
+  "edges": [
+    {
+      "from": "A",
+      "to": "B"
+    },
+    {
+      "from": "B",
+      "to": "C"
+    },
+    {
+      "from": "B",
+      "to": "D"
+    },
+    {
+      "from": "C",
+      "to": "E"
+    },
+    {
+      "from": "C",
+      "to": "F"
+    },
+    {
+      "from": "D",
+      "to": "G"
+    },
+    {
+      "from": "D",
+      "to": "H"
+    }
+  ]
+}

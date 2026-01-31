@@ -1,35 +1,5 @@
 #include "SIMDMatrix.h"
 
-#ifdef _MSC_VER
-	#include <intrin.h>
-#else
-	#include <cpuid.h>
-#endif
-
-bool isAVX2Supported()
-{
-	std::vector<int> cpuInfo(4);
-
-#ifdef _MSC_VER
-	__cpuid(cpuInfo.data(), 0);
-#else
-	__get_cpuid(0, (unsigned int*)&cpuInfo[0], (unsigned int*)&cpuInfo[1],
-		(unsigned int*)&cpuInfo[2], (unsigned int*)&cpuInfo[3]);
-#endif
-
-	int numIds = cpuInfo[0];
-	if (numIds < 7) return false;
-
-#ifdef _MSC_VER
-	__cpuidex(cpuInfo.data(), 7, 0);
-#else
-	__cpuid_count(7, 0, cpuInfo[0], cpuInfo[1], cpuInfo[2], cpuInfo[3]);
-#endif
-
-	// check if bit 5 of EBX
-	return (cpuInfo[1] & 0x20) != 0;
-}
-
 static void* alloc_aligned(size_t size, size_t alignment)
 {
 	size_t safeSize = (size + alignment - 1) & ~(alignment - 1);
@@ -152,6 +122,18 @@ SIMDMatrix& SIMDMatrix::operator=(SIMDMatrix&& other) noexcept
 	other.m_cols = 0;
 	other.m_stride = 0;
 	return *this;
+}
+
+bool SIMDMatrix::isZero() const
+{
+	for (size_t i = 0; i < m_rows; i++)
+	for (size_t j = 0; j < m_cols; j++)
+	{
+		if (get(i, j) != 0)
+			return false;
+	}
+
+	return true;
 }
 
 SIMDMatrix SIMDMatrix::operator+(const SIMDMatrix& other)

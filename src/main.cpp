@@ -3,14 +3,6 @@
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
-// TODOs:
-// 1. Adjacency matrix (DONE)
-// 2. Invent an easy file structure to parse (DONE)
-// 3. Graph parsing (DONE)
-// 4. Alg for finding paths with specified length
-// 5. Alg for finding if the digraph is acyclic or cyclic
-// 6. Some tests maybe?
-
 static void logError(const std::string_view content)
 {
 	static const std::string ERROR_STR = fmt::format(fmt::emphasis::bold, "ERROR");
@@ -64,6 +56,16 @@ public:
 		}
 
 		fmt::println("{} paths of length {} were found!", pathCount, length);
+	}
+
+	bool isAcyclic() const
+	{
+		SIMDMatrix walkMatrix = linear_algebra::pow(m_adjMatrix, m_verticesCount);
+
+		if (walkMatrix.isZero())
+			return true; 
+
+		return false;
 	}
 
 	static Digraph fromFile(const std::string_view filepath)
@@ -189,12 +191,6 @@ int main(int argc, char** argv)
 		logError("Specified file doesn't exist");
 		return -1;
 	}
-	
-	if (not isAVX2Supported())
-	{
-		logError("AVX2 is not supported on this machine. Please try another one.");
-		return -1;
-	}
 
 	// parse
 	Digraph graph;
@@ -225,6 +221,11 @@ int main(int argc, char** argv)
 
 			break;
 		case '2':
+			if (graph.isAcyclic())
+				fmt::println("The graph is acyclic");
+			else
+				fmt::println("The graph is not acyclic");
+
 			break;
 		case '3':
 			run = false;
