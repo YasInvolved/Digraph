@@ -44,10 +44,26 @@ public:
 		return value == 1.0f;
 	}
 
-	void findPath(const std::string_view v1, const std::string_view v2, uint32_t length)
+	void findAllPathsWithLength(uint64_t length) const
 	{
-		if (!vertexExists(v1) || !vertexExists(v2))
-			throw std::runtime_error("One of specified vertices doesn't exist in this graph!");
+		SIMDMatrix walkMatrix = linear_algebra::pow(m_adjMatrix, length);
+
+		size_t pathCount = 0;
+		for (size_t i = 0; i < walkMatrix.getRowCount(); i++)
+		for (size_t j = 0; j < walkMatrix.getColCount(); j++)
+		{
+			if (i == j)
+				continue;
+
+			float paths = walkMatrix.get(i, j);
+			if (paths > 0.0f)
+			{
+				fmt::print("There are {} paths of length {} from {} to {}\n", paths, static_cast<uint32_t>(length), m_ixToVert.at(i), m_ixToVert.at(j));
+				pathCount++;
+			}
+		}
+
+		fmt::println("{} paths of length {} were found!", pathCount, length);
 	}
 
 	static Digraph fromFile(const std::string_view filepath)
@@ -101,8 +117,10 @@ public:
 			mat.set(fvIx, tvIx, 1.0f);
 
 			// lookup table serves for quick matrix col/row index finding,
-			// so we don't need to do O(N) col/row searches in matrix
+			// so we don't need to do searches around the array of vertices
+			digraph.m_ixToVert.try_emplace(fvIx, from);
 			lt.try_emplace(std::move(from), fvIx);
+			digraph.m_ixToVert.try_emplace(tvIx, to);
 			lt.try_emplace(std::move(to), tvIx);
 		}
 
@@ -122,6 +140,7 @@ private:
 	size_t m_verticesCount;
 	SIMDMatrix m_adjMatrix;
 	LookupTable_t m_lookupTable;
+	std::unordered_map<size_t, std::string> m_ixToVert;
 };
 
 int main(int argc, char** argv)
@@ -167,8 +186,24 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
-	fmt::print("A is leading to B: {}\n", graph.isLeadingTo("A", "B"));
-	graph.findPath("A", "C", 2);
+	bool run = true;
+	while (run)
+	{
+		uint32_t choice;
+		fmt::print("Tasks:\n\t1. Find a path of specified length\n\t2. Check if the graph is acyclic.\n\t3. exit\n\nChoice: ");
+		std::cin >> choice;
+
+		switch (choice)
+		{
+		case 1:
+			break;
+		case 2:
+			break;
+		case 3:
+			run = false;
+			break;
+		}
+	}
 
 	return 0;
 }
