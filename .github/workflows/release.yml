@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    name: Build the Project
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        preset: [windows-release, linux-release]
+        exclude:
+          - os: ubuntu-latest
+            preset: windows-release
+          - os: windows-latest
+            preset: linux-release
+
+    permissions:
+      packages: write
+      contents: write
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          submodules: recursive
+
+      - name: Install CMake
+        uses: ssrobins/install-cmake@v1
+        with:
+          version: 4.2.2
+
+      - name: Install VS 18 2026 Build tools (Windows only)
+        if: runner.os == 'Windows'
+        uses: k3DW/setup-msvc@v1
+        with:
+          vs-version: "18.2.1"
+
+      - name: Build Project
+        run: cmake --workflow --preset workflow-${{ matrix.preset }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: digraph-${{ matrix.preset }}-${GITHUB_REF_NAME}
+          path: build/conf-${{ matrix.preset }}/bin/*.exe
+
+  create-release:
+    name: Create Release
+    needs: build
+    permissions:
+      packages: read
+      contents: read
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: digraph-*
+          path: dist
+          merge-multiple: true
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
