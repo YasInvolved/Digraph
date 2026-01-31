@@ -18,4 +18,6 @@ target_link_libraries(simdmatrix_test
 )
 
 include(GoogleTest)
-gtest_discover_tests(simdmatrix_test)
+gtest_discover_tests(simdmatrix_test 
+	PROPERTIES TIMEOUT 900
+)
