@@ -91,9 +91,9 @@ SIMDMatrix::~SIMDMatrix()
 }
 
 SIMDMatrix::SIMDMatrix(const SIMDMatrix& other)
-	: m_rows(other.m_rows), m_cols(other.m_cols), m_stride(other.m_stride)
+	: m_rows(other.m_rows), m_cols(other.m_cols), m_stride(other.m_stride), m_strideRow(other.m_strideRow)
 {
-	size_t bytes = m_rows * m_stride * sizeof(float);
+	size_t bytes = m_strideRow * m_stride * sizeof(float);
 	m_data = (float*)alloc_aligned(bytes, SIMD_ALIGNMENT);
 	std::memcpy(m_data, other.m_data, bytes);
 }
@@ -103,8 +103,8 @@ SIMDMatrix& SIMDMatrix::operator=(const SIMDMatrix& other)
 	if (this == &other)
 		return *this;
 
-	size_t neededBytes = other.m_rows * other.m_stride * sizeof(float);
-	size_t currentBytes = m_rows * m_stride * sizeof(float);
+	size_t neededBytes = other.m_strideRow * other.m_stride * sizeof(float);
+	size_t currentBytes = m_strideRow * m_stride * sizeof(float);
 
 	if (neededBytes != currentBytes)
 	{
@@ -115,6 +115,7 @@ SIMDMatrix& SIMDMatrix::operator=(const SIMDMatrix& other)
 	m_rows = other.m_rows;
 	m_cols = other.m_cols;
 	m_stride = other.m_stride;
+	m_strideRow = other.m_strideRow;
 	std::memcpy(m_data, other.m_data, neededBytes);
 
 	return *this;
@@ -124,11 +125,14 @@ SIMDMatrix::SIMDMatrix(SIMDMatrix&& other) noexcept
 	: m_rows(other.m_rows),
 	m_cols(other.m_cols),
 	m_stride(other.m_stride),
+	m_strideRow(other.m_strideRow),
 	m_data(other.m_data)
 {
 	other.m_data = nullptr;
 	other.m_rows = 0;
 	other.m_cols = 0;
+	other.m_stride = 0;
+	other.m_strideRow = 0;
 }
 
 SIMDMatrix& SIMDMatrix::operator=(SIMDMatrix&& other) noexcept
@@ -141,6 +145,7 @@ SIMDMatrix& SIMDMatrix::operator=(SIMDMatrix&& other) noexcept
 	m_rows = other.m_rows;
 	m_cols = other.m_cols;
 	m_stride = other.m_stride;
+	m_strideRow = other.m_strideRow;
 
 	other.m_data = nullptr;
 	other.m_rows = 0;
