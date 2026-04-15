@@ -72,7 +72,7 @@ public:
 			float paths = walkMatrix.get(i, j);
 			if (paths > 0.0f)
 			{
-				fmt::print("There's a path of length {} from {} to {}\n", paths, static_cast<uint32_t>(length), m_ixToVert.at(i), m_ixToVert.at(j));
+				fmt::print("There's a path of length {} from {} to {}\n", static_cast<uint32_t>(length), m_ixToVert.at(i), m_ixToVert.at(j));
 				pathCount++;
 			}
 		}
@@ -230,7 +230,7 @@ int main(int argc, char** argv)
 	bool run = true;
 	while (run)
 	{
-		int choice = menu("Choose an action:\n\t1. Look for paths with specified lenght\n\t2. Check whether the graph is acyclic\n\t3. Exit\n\nChoice: ");
+		int choice = menu("Choose an action:\n\t1. Look for paths with specified length\n\t2. Check whether the graph is acyclic\n\t3. Exit\n\nChoice: ");
 
 		switch (choice)
 		{
